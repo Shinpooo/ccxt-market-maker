@@ -13,7 +13,7 @@ This repository currently includes an initial Market Data service prototype usin
 - `market_data/`: Exchange websockets and publishing logic.
 - `orderrouter/`: Placeholder for order submission + fills streaming.
 - `strategyengine/`: Placeholder for strategies and orchestration.
-- `ccxt_wrapper/`: Placeholder for exchange abstractions/helpers.
+- `ccxt_wrapper/`: Drop-in replacement for `ccxt.pro` (custom patches supported).
 - `main.py`: Entry point placeholder.
 - `pyproject.toml`: Project metadata (Python >= 3.10.12).
 
@@ -89,6 +89,27 @@ asyncio.run(main())
 ```
 
 Note: The provided `main.py` is a placeholder; run your own orchestrator or import `MarketData` directly.
+
+**Scripts**
+
+- `scripts/run_internal_ob_ccxt.py`: Stream an order book using the ccxt wrapper.
+  - Preferred: `uv run -m scripts.run_internal_ob_ccxt --exchange binance --symbol BTC/USDT --limit 1 --rate-limit`
+  - Or: `python -m scripts.run_internal_ob_ccxt --exchange binance --symbol BTC/USDT --limit 1 --rate-limit`
+- `scripts/init_internal_ob_mexc.py`: Sanity-check imports by initializing an internal orderbook for MEXC XPL/USDT.
+  - Run: `uv run -m scripts.init_internal_ob_mexc`
+
+**CCXT Wrapper (Drop‑in)**
+
+- Use exactly like `ccxt.pro`:
+  - `from ccxt_wrapper import binance`
+  - `client = binance({...})`
+- Implementation: `ccxt_wrapper` re-exports all attributes from `ccxt.pro`, then overrides any names defined in `ccxt_wrapper/<id>.py` (e.g., `ccxt_wrapper/mexc.py`).
+- To customize an exchange, create `ccxt_wrapper/<id>.py` and export either:
+  - Subclass pattern:
+    - `class binance(ccxtpro.binance): ...`
+  - Factory function pattern:
+    - `def binance(*args, **kwargs): inst = ccxtpro.binance(*args, **kwargs); ...; return inst`
+- If no override is provided, it automatically falls back to the vanilla `ccxt.pro` exchange.
 
 **Design Contracts**
 
